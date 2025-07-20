@@ -42,9 +42,8 @@ pipeline {
 
     post {
         always {
-            echo 'Stopping Node.js app if still running...'
-            bat 'for /f "tokens=5" %a in (\'netstat -aon ^| findstr :8081 ^| findstr LISTENING\') do taskkill /F /PID %a'
-            echo 'Pipeline completed.'
+            echo 'Stopping app on port 8081...'
+            bat 'for /f "tokens=5" %%a in (\'netstat -aon ^| findstr :8081 ^| findstr LISTENING\') do taskkill /F /PID %%a'
         }
         success {
             echo 'Build succeeded!'
