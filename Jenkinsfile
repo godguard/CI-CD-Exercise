@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        NODE_VERSION = '22'
-        APP_PORT = '8081'  // Change this if your app uses a different port
+        NODE_VERSION = '18' // Specify the Node.js version
+        APP_PORT = '8080'   // Default port for the application
     }
 
     stages {
@@ -13,45 +13,43 @@ pipeline {
             }
         }
 
-        stage('Verify Node.js') {
+        stage('Set Up Node.js') {
             steps {
-                bat 'node -v'
-                bat 'npm -v'
+                script {
+                    // Install Node.js using nvm or ensure it's pre-installed
+                    sh 'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash'
+                    sh '. ~/.nvm/nvm.sh && nvm install ${NODE_VERSION} && nvm use ${NODE_VERSION}'
+                }
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                bat 'npm install'
+                sh 'npm install'
             }
         }
 
         stage('Start Application') {
             steps {
-                echo 'Starting application in background...'
-                bat 'start /B npm start'
-                // Wait ~5 seconds to let app start
-                timeout(time: 10, unit: 'SECONDS') {
-                    bat 'ping -n 6 127.0.0.1 > nul'
+                script {
+                    // Start the application in the background
+                    sh 'PORT=${APP_PORT} nohup npm start &'
                 }
             }
         }
 
         stage('Run Tests') {
             steps {
-                bat 'npm test'
+                script {
+                    // Run tests after ensuring the app is running
+                    sh 'npm test'
+                }
             }
         }
     }
 
     post {
         always {
-            echo "Stopping app if running on port ${env.APP_PORT}..."
-            bat '''
-            for /f "tokens=5" %%a in ('netstat -aon ^| findstr :%APP_PORT% ^| findstr LISTENING') do (
-                taskkill /F /PID %%a || exit 0
-            )
-            '''
             echo 'Pipeline completed.'
         }
         success {
