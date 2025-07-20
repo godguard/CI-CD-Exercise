@@ -49,7 +49,7 @@ pipeline {
             echo 'Stopping Node.js app if running...'
             // Kill process listening on port 8081 (adjust port as needed)
             bat '''
-            for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8081 ^| findstr LISTENING') do taskkill /F /PID %%a
+            for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8081 ^| findstr LISTENING') do taskkill /F /PID %%a || exit 0
             '''
             echo 'Pipeline completed.'
         }
