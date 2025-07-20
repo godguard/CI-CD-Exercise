@@ -1,24 +1,25 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'NodeJS_18' // Make sure Jenkins has this tool name configured under "Global Tool Configuration"
+    environment {
+        NODE_VERSION = '18' // Adjust Node version as needed
     }
 
-    environment {
-        // Example: Set environment variables if needed
-        NODE_ENV = 'development'
+    tools {
+        nodejs "${NODE_VERSION}"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
+                echo 'Checking out code...'
                 checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
+                echo 'Installing dependencies...'
                 sh 'npm install'
             }
         }
@@ -26,7 +27,8 @@ pipeline {
         stage('Start Application') {
             steps {
                 echo 'Starting application...'
-                sh 'npm run start &'
+                sh 'npm start &'
+                sleep time: 5, unit: 'SECONDS' // give it time to boot up (adjust as needed)
             }
         }
 
@@ -40,13 +42,16 @@ pipeline {
 
     post {
         always {
-            echo 'Pipeline completed.'
+            echo 'Cleaning up...'
+            sh 'kill $(lsof -t -i:3000) || true' // example to kill app running on port 3000
         }
+
         success {
-            echo 'Build succeeded!'
+            echo 'Pipeline completed successfully!'
         }
+
         failure {
-            echo 'Build failed!'
+            echo 'Pipeline failed.'
         }
     }
 }
