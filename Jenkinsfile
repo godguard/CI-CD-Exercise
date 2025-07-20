@@ -2,39 +2,40 @@ pipeline {
     agent any
 
     environment {
-        NODE_VERSION = '22' // Adjust Node version as needed
-    }
-
-    tools {
-        nodejs "${NODE_VERSION}"
+        NODE_VERSION = '18' // Specify the Node.js version
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                echo 'Checking out code...'
                 checkout scm
+            }
+        }
+
+        stage('Set Up Node.js') {
+            steps {
+                script {
+                    // Use Node.js version manager if available
+                    sh "nvm install ${NODE_VERSION} || true"
+                    sh "nvm use ${NODE_VERSION} || true"
+                }
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                echo 'Installing dependencies...'
                 sh 'npm install'
             }
         }
 
-        stage('Start Application') {
+        stage('Start App') {
             steps {
-                echo 'Starting application...'
-                sh 'npm start &'
-                sleep time: 5, unit: 'SECONDS' // give it time to boot up (adjust as needed)
+                sh 'npm start'
             }
         }
 
         stage('Run Tests') {
             steps {
-                echo 'Running tests...'
                 sh 'npm test'
             }
         }
@@ -42,16 +43,13 @@ pipeline {
 
     post {
         always {
-            echo 'Cleaning up...'
-            sh 'kill $(lsof -t -i:3000) || true' // example to kill app running on port 3000
+            echo 'Pipeline completed.'
         }
-
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Build succeeded!'
         }
-
         failure {
-            echo 'Pipeline failed.'
+            echo 'Build failed.'
         }
     }
 }
