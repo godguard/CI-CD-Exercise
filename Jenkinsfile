@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        NODE_VERSION = '22' // Documented, but not used without nvm
+        NODE_VERSION = '22'
     }
 
     stages {
@@ -28,10 +28,8 @@ pipeline {
         stage('Start App') {
             steps {
                 echo 'Starting Node.js app in background...'
-                // Start app in background without blocking Jenkins
                 bat 'start /B npm start'
-                // Give app time to start
-                timeout(time: 5, unit: 'SECONDS')
+                sleep time: 5, unit: 'SECONDS'
             }
         }
 
@@ -45,7 +43,6 @@ pipeline {
     post {
         always {
             echo 'Stopping Node.js app if still running...'
-            // Kill process using port 8081 (adjust if needed)
             bat 'for /f "tokens=5" %a in (\'netstat -aon ^| findstr :8081 ^| findstr LISTENING\') do taskkill /F /PID %a'
             echo 'Pipeline completed.'
         }
